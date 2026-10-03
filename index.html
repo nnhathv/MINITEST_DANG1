@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MINITEST – Đọc điền quảng cáo, thông báo, tờ rơi</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Noto+Serif:ital,wght@0,400;0,600;0,700;1,400&display=swap');
+
+  :root {
+    --green-main: #00b012;
+    --green-dark: #008a0e;
+    --green-soft: #edfbed;
+    --green-border: #bbf0bf;
+    --ink: #1f2937;
+    --muted: #6b7280;
+    --border: #d1d5db;
+    --bg-light: #f8faf8;
+    --correct-bg: #dcfce7;
+    --correct-border: #22c55e;
+    --correct-text: #15803d;
+    --wrong-bg: #fee2e2;
+    --wrong-border: #ef4444;
+    --wrong-text: #b91c1c;
+    --font-sans: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-serif: 'Noto Serif', Georgia, serif;
+
+    /* Highlight Colors */
+    --hl-green: #bbf7d0;
+    --hl-blue: #bae6fd;
+    --hl-orange: #fed7aa;
+    --hl-yellow: #fef08a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-sans);
+    background: #f4f6f4;
+    color: var(--ink);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* 1. TOP HEADER */
+  header {
+    height: 56px;
+    background: #ffffff;
+    border-bottom: 2px solid var(--green-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0, 176, 18, 0.06);
+    z-index: 10;
+  }
+  .brand-zone {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .brand-logo {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--green-dark);
+    letter-spacing: -0.5px;
+  }
+  .passage-tabs {
+    display: flex;
+    gap: 6px;
+    background: #f0f3f0;
+    padding: 4px;
+    border-radius: 8px;
+  }
+  .ptab-btn {
+    border: none;
+    background: transparent;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    font-family: var(--font-sans);
+    color: #4b5563;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.15s;
+  }
+  .ptab-btn:hover { color: var(--green-dark); }
+  .ptab-btn.active {
+    background: var(--green-main);
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(0, 176, 18, 0.25);
+  }
+  .timer-box {
+    font-weight: 700;
+    font-size: 14px;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg-light);
+    border: 1px solid var(--border);
+    padding: 4px 12px;
+    border-radius: 8px;
+  }
+
+  /* 2. MAIN 2 COLUMNS */
+  .main-container {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    position: relative;
+  }
+  .pane {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 28px;
+    background: #ffffff;
+  }
+  .pane-left {
+    border-right: 1px solid var(--border);
+  }
+  .pane-right {
+    background: #fafbfa;
+  }
+
+  .resizer {
+    width: 8px;
+    background: #e5e7eb;
+    cursor: col-resize;
+    flex-shrink: 0;
+    transition: background 0.15s;
+  }
+  .resizer:hover, .resizer.dragging { background: var(--green-main); }
+
+  /* BÀI ĐỌC */
+  .instruction-box {
+    background: var(--green-soft);
+    border-left: 4px solid var(--green-main);
+    padding: 12px 16px;
+    border-radius: 0 8px 8px 0;
+    margin-bottom: 20px;
+  }
+  .instruction-box h3 {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--green-dark);
+    margin-bottom: 3px;
+  }
+  .instruction-box p {
+    font-size: 13px;
+    color: #374151;
+    font-style: italic;
+  }
+  .passage-title {
+    font-family: var(--font-serif);
+    font-size: 24px;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 4px;
+  }
+  .passage-subtitle {
+    font-size: 14px;
+    color: var(--muted);
+    font-style: italic;
+    margin-bottom: 18px;
+  }
+  .passage-body {
+    font-family: var(--font-serif);
+    font-size: 16.5px;
+    line-height: 1.8;
+    color: #27272a;
+    text-align: justify;
+  }
+  .passage-body p {
+    margin-bottom: 16px;
+  }
+  .passage-body h4 {
+    font-family: var(--font-sans);
+    font-size: 16px;
+    color: var(--green-dark);
+    margin: 14px 0 6px;
+  }
+  .cloze-blank {
+    display: inline-block;
+    padding: 1px 10px;
+    margin: 0 3px;
+    background: #e0f2fe;
+    color: #0369a1;
+    border: 1.5px dashed #0284c7;
+    border-radius: 6px;
+    font-weight: 800;
+    font-family: var(--font-sans);
+    font-size: 14px;
+  }
+
+  /* CÂU HỎI */
+  .q-section {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 22px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+  }
+  .q-section-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--green-dark);
+    margin-bottom: 14px;
+  }
+  .mc-item {
+    padding: 14px 0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .mc-item:last-child { border-bottom: none; }
+  .mc-statement {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: #1f2937;
+  }
+  .mc-grid-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .mc-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13.5px;
+    font-weight: 600;
+    background: var(--bg-light);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: 0.15s;
+    user-select: none;
+  }
+  .mc-label:hover { border-color: var(--green-main); }
+  .mc-label input { accent-color: var(--green-main); }
+  .mc-label.selected {
+    background: var(--green-soft);
+    border-color: var(--green-main);
+    color: var(--green-dark);
+    font-weight: 700;
+  }
+
+  /* STYLING TRẠNG THÁI SAU KHI NỘP BÀI (REVIEW MODE) */
+  .mc-label.state-correct {
+    background: var(--correct-bg) !important;
+    border-color: var(--correct-border) !important;
+    color: var(--correct-text) !important;
+    font-weight: 700 !important;
+  }
+  .mc-label.state-wrong {
+    background: var(--wrong-bg) !important;
+    border-color: var(--wrong-border) !important;
+    color: var(--wrong-text) !important;
+    font-weight: 700 !important;
+  }
+  .correct-badge {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: #16a34a;
+    color: #fff;
+  }
+
+  /* 3. FOOTER */
+  footer {
+    height: 70px;
+    background: #ffffff;
+    border-top: 1.5px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    flex-shrink: 0;
+    gap: 12px;
+  }
+  .footer-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    overflow-x: auto;
+    padding: 4px 0;
+  }
+  .progress-legend {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--muted);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .p-group {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    border-right: 1.5px dashed var(--border);
+    padding-right: 10px;
+    margin-right: 4px;
+  }
+  .p-group:last-child { border-right: none; }
+  .p-group-tag {
+    font-size: 10.5px;
+    font-weight: 800;
+    color: var(--green-dark);
+    background: var(--green-soft);
+    padding: 2px 5px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+  .circle-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border);
+    background: #ffffff;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+  }
+  .circle-btn:hover {
+    border-color: var(--green-main);
+    color: var(--green-main);
+  }
+  .circle-btn.answered {
+    background: var(--green-main) !important;
+    border-color: var(--green-main) !important;
+    color: #ffffff !important;
+  }
+  /* Trạng thái xem lại sau nộp bài */
+  .circle-btn.res-correct {
+    background: #22c55e !important;
+    border-color: #16a34a !important;
+    color: #ffffff !important;
+  }
+  .circle-btn.res-wrong {
+    background: #ef4444 !important;
+    border-color: #dc2626 !important;
+    color: #ffffff !important;
+  }
+
+  .submit-btn {
+    background: var(--green-main);
+    color: #ffffff;
+    border: none;
+    font-family: var(--font-sans);
+    font-size: 14.5px;
+    font-weight: 700;
+    padding: 10px 24px;
+    border-radius: 10px;
+    cursor: pointer;
+    white-space: nowrap;
+    box-shadow: 0 3px 10px rgba(0, 176, 18, 0.25);
+    transition: 0.15s;
+  }
+  .submit-btn:hover { background: var(--green-dark); }
+
+  /* 4. MODAL KẾT QUẢ VỚI NÚT "OK" */
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal-box {
+    background: #ffffff;
+    border-radius: 18px;
+    padding: 32px;
+    width: 420px;
+    max-width: 90%;
+    text-align: center;
+    border: 2px solid var(--green-border);
+    box-shadow: 0 12px 36px rgba(0,0,0,0.25);
+  }
+  .modal-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: #111827;
+  }
+  .modal-score {
+    font-size: 52px;
+    font-weight: 800;
+    color: var(--green-dark);
+    margin: 12px 0 6px;
+  }
+  .modal-sub {
+    font-size: 14.5px;
+    color: var(--muted);
+    margin-bottom: 24px;
+    line-height: 1.5;
+  }
+  .modal-ok-btn {
+    background: var(--green-main);
+    color: #fff;
+    border: none;
+    font-family: var(--font-sans);
+    font-size: 16px;
+    font-weight: 800;
+    padding: 12px 40px;
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 176, 18, 0.3);
+    transition: 0.15s;
+  }
+  .modal-ok-btn:hover { background: var(--green-dark); }
+
+  .passage-content, .questions-content { display: none; }
+  .passage-content.active, .questions-content.active { display: block; }
+
+  /* HIGHLIGHT FLOATING TOOLBAR */
+  .hl-span { border-radius: 2px; padding: 1px 0; }
+  .hl-green { background-color: var(--hl-green); }
+  .hl-blue { background-color: var(--hl-blue); }
+  .hl-orange { background-color: var(--hl-orange); }
+  .hl-yellow { background-color: var(--hl-yellow); }
+
+  #hlToolbar {
+    position: absolute;
+    display: none;
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 6px 10px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    align-items: center;
+    gap: 8px;
+    transform: translate(-50%, -100%);
+    margin-top: -8px;
+  }
+  #hlToolbar::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 6px 6px 0;
+    border-style: solid;
+    border-color: #ffffff transparent transparent;
+    display: block;
+    width: 0;
+  }
+  .hl-btn {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(0,0,0,0.15);
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+  .hl-btn:hover { transform: scale(1.15); }
+  .hl-btn-green { background-color: var(--hl-green); }
+  .hl-btn-blue { background-color: var(--hl-blue); }
+  .hl-btn-orange { background-color: var(--hl-orange); }
+  .hl-btn-yellow { background-color: var(--hl-yellow); }
+  .hl-btn-clear {
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 2px 7px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #4b5563;
+    cursor: pointer;
+  }
+  .hl-btn-clear:hover { background: #e5e7eb; color: #111827; }
+</style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <div class="brand-zone">
+      <div class="brand-logo">🌿 MINITEST</div>
+      <div class="passage-tabs">
+        <button class="ptab-btn active" id="tab-btn-1" onclick="switchPassage(1)">Reading 1 (Q1–5)</button>
+        <button class="ptab-btn" id="tab-btn-2" onclick="switchPassage(2)">Reading 2 (Q6–11)</button>
+        <button class="ptab-btn" id="tab-btn-3" onclick="switchPassage(3)">Reading 3 (Q12–17)</button>
+      </div>
+    </div>
+    <div class="timer-box">
+      <span>⏱️ Thời gian:</span>
+      <span id="timerDisplay">30:00</span>
+    </div>
+  </header>
+
+  <!-- BODY 2 CỘT -->
+  <div class="main-container" id="container">
+    
+    <!-- CỘT TRÁI: BÀI ĐỌC -->
+    <div class="pane pane-left" id="leftPane">
+
+      <!-- ================= READING 1 ================= -->
+      <div class="passage-content active" id="ptext-1">
+        <div class="instruction-box">
+          <h3>READING 1</h3>
+          <p>Read the following passage and mark the letter A, B, C, or D on your answer sheet to indicate the correct word or phrase that best fits each of the numbered blanks.</p>
+        </div>
+        <h1 class="passage-title">KEEPING FIT</h1>
+        <div class="passage-body">
+          <p>Bodies are made to move! They are not <span class="cloze-blank">(1)</span> for sitting around in front of the television or reading magazines. Keeping fit doesn't mean have to be a super-athlete, and even <span class="cloze-blank">(2)</span> exercise can give you a lot of fun. When you are fit and healthy, you will find you look better and feel better. You will develop more energy and self-confidence.</p>
+          <p>Every time you move, you are exercising. The human body is designed to bend, stretch, run, jump and climb. <span class="cloze-blank">(3)</span> it does, the stronger and fitter it will become. Best of all, exercise is fun. It's what your body likes doing most-keeping on the move.</p>
+          <p>Physical exercise is not only good for your body. People who take regular exercise are usually happier, more relaxed and more alert than people who sit around all day. Try an experiment-next time you are in a bad mood, go for a walk or play a ball game in the park. See how much better you feel after an hour.</p>
+          <p>A good <span class="cloze-blank">(4)</span> of achievement is yet another benefit of exercise. People feel good about themselves when they know they have improved their fitness. People who exercise regularly will tell you that they find they have more energy to enjoy life. So have <span class="cloze-blank">(5)</span> you'll soon see and feel the benefits.</p>
+        </div>
+      </div>
+
+      <!-- ================= READING 2 ================= -->
+      <div class="passage-content" id="ptext-2">
+        <div class="instruction-box">
+          <h3>READING 2</h3>
+          <p>Read the following announcement and mark the letter A, B, C, or D on your answer sheet to indicate the correct word or phrase that best fits each of the numbered blanks.</p>
+        </div>
+        <h1 class="passage-title">Library System Upgrade Notification</h1>
+        <div class="passage-body">
+          <p>Please be advised that the university library system will undergo a necessary upgrade <span class="cloze-blank">(6)</span> the weekend of July 20th-21st. During this period, access to the online library catalogue, electronic databases, and account services will be temporarily unavailable.</p>
+          <p>We understand this may cause some inconvenience and appreciate your <span class="cloze-blank">(7)</span> as we work to improve our services. The library building itself will remain <span class="cloze-blank">(8)</span> during its regular hours on Saturday, July 20th. However, borrowing and returning services may <span class="cloze-blank">(9)</span> some delays. The library will be completely closed on Sunday, July 21st, to allow for the final stages of the upgrade and testing.</p>
+          <p>We recommend you <span class="cloze-blank">(10)</span> any needed materials or download necessary articles in advance of the upgrade period. All online services are expected to be fully restored by Monday, July 22nd. Please check the library website for any <span class="cloze-blank">(11)</span> updates.</p>
+          <p>Thank you for your understanding.</p>
+        </div>
+      </div>
+
+      <!-- ================= READING 3 ================= -->
+      <div class="passage-content" id="ptext-3">
+        <div class="instruction-box">
+          <h3>READING 3</h3>
+          <p>Read the following leaflet and mark the letter A, B, C, or D on your answer sheet to indicate the correct word or phrase that best fits each of the numbered blanks.</p>
+        </div>
+        <h1 class="passage-title">Make Small Changes</h1>
+        <div class="passage-subtitle">EASY WAYS TO LIVE A GREENER LIFE</div>
+        <div class="passage-body">
+          <p>You don't need to make huge changes overnight. Start with small <span class="cloze-blank">(12)</span> like turning off unused lights or carrying a reusable shopping bag.</p>
+          
+          <h4>Save Energy</h4>
+          <p>Cutting down on electricity use is great for the environment and your bills. Choose energy-efficient appliances and <span class="cloze-blank">(13)</span> electronics when not in use.</p>
+
+          <h4>Use Less Plastic</h4>
+          <p>Reducing plastic waste is key to protecting nature. Bring your own water bottles and <span class="cloze-blank">(14)</span> instead of using single-use ones.</p>
+
+          <h4>Eat Smart</h4>
+          <p>Eating locally grown food supports farmers and cuts down on transport pollution. Choosing more plant-based meals can also lower the <span class="cloze-blank">(15)</span> of carbon you produce.</p>
+
+          <h4>Get Involved</h4>
+          <p>Being eco-friendly is easier when everyone joins in. Talk to friends and family about green habits and join <span class="cloze-blank">(16)</span> groups in your area.</p>
+
+          <h4>Final Thought</h4>
+          <p><span class="cloze-blank">(17)</span> using reusable items, recycling and supporting green businesses are all stages toward a healthier planet. Every action matters!</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- THANH KÉO CO GIÃN -->
+    <div class="resizer" id="dragResizer"></div>
+
+    <!-- CỘT PHẢI: CÂU HỎI -->
+    <div class="pane pane-right" id="rightPane">
+
+      <!-- ================= READING 1 QUESTIONS (1-5) ================= -->
+      <div class="questions-content active" id="qcontent-1">
+        <div class="q-section">
+          <div class="q-section-title">Questions 1–5</div>
+
+          <!-- Q1 -->
+          <div class="mc-item" id="q-block-1">
+            <div class="mc-statement"><b>Question 1.</b></div>
+            <div class="mc-grid-options">
+              <label class="mc-label"><input type="radio" name="q1" value="A" onchange="updateRadio(1)"> A. planned</label>
+              <label class="mc-label"><input type="radio" name="q1" value="B" onchange="updateRadio(1)"> B. designed</label>
+              <label class="mc-label"><input type="radio" name="q1" value="C" onchange="updateRadio(1)"> C. programmed</label>
+              <label class="mc-label"><input type="radio" name="q1" value="D" onchange="updateRadio(1)"> D. caused</label>
+            </div>
+          </div>
+
+          <!-- Q2 -->
+          <div class="mc-item" id="q-block-2">
+            <div class="mc-statement"><b>Question 2.</b></div>
+            <div class="mc-grid-options">
+              <label class="mc-label"><input type="radio" name="q2" value="A" onchange="updateRadio(2)"> A. a little</label>
+              <label class="mc-label"><input type="radio" name="q2" value="B" onchange="updateRadio(2)"> B. a few</label>
+              <label class="mc-label"><input type="radio" name="q2" value="C" onchange="updateRadio(2)"> C. little</label>
+              <label class="mc-label"><input type="radio" name="q2" value="D" onchange="updateRadio(2)"> D. few</label>
+            </div>
+          </div>
+
+          <!-- Q3 -->
+          <div class="mc-item" id="q-block-3">
+            <div class="mc-statement"><b>Question 3.</b></div>
+            <div class="mc-grid-options">
+              <label class="mc-label"><input type="radio" name="q3" value="A" onchange="updateRadio(3)"> A. more and more</label>
+              <label class="mc-label"><input type="radio" name="q3" value="B" onchange="updateRadio(3)"> B. the more</label>
+              <label class="mc-label"><input type="radio" name="q3" value="C" onchange="updateRadio(3)"> C. more</label>
+              <label class="mc-label"><input type="radio" name="q3" value="D" onchange="updateRadio(3)"> D. moreover</label>
+            </div>
+          </div>
+
+          <!-- Q4 -->
+          <div class="mc-item" id="q-block-4">
+            <div class="mc-statement"><b>Question 4.</b></div>
+            <div class="mc-grid-options">
+              <label class="mc-label"><input type="radio" name="q4" value="A" onchange="updateRadio(4)"> A. sense</label>
+              <label class="mc-label"><input type="radio" name="q4" value="B" onchange="updateRadio(4)"> B. feel</label>
+              <label class="mc-label"><input type="radio" name="q4" value="C" onchange="updateRadio(4)"> C. lot</label>
+              <label class="mc-label"><input type="radio" name="q4" value="D" onchange="updateRadio(4)"> D. piece</label>
+            </div>
+          </div>
+
+          <!-- Q5 -->
+          <div class="mc-item" id="q-block-5">
+            <div class="mc-statement"><b>Question 5.</b></div>
+            <div class="mc-grid-options">
+              <label class="mc-label"><input type="radio" name="q5" value="A" onchange="updateRadio(5)"> A. a run</label>
+              <label class="mc-label"><input type="radio" name="q5" value="B" onchange="updateRadio(5)"> B. a trial</label>
+              <label class="mc-label"><input type="radio" name="q5" value="C" onchange="updateRadio(5)"> C. a go</label>
+              <label class="mc-label"><input type="radio" name="q5" value="D" onchange="updateRadio(5)"> D. a start</label>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ================= READING 2 QUESTIONS (6-11) ================= -->
+      <div class="questions-content" id="qcontent-2">
+        <div class="q-section">
+          <div class="q-section-title">Questions 6–11</div>
+
+          <!-- Q6 -->
+          <div class="mc-item" id="q-block-6">
+            <div class="mc-statement"><b>Question 6.</b></div>
+            <div class="mc-grid-options">
+              <label class="mc-label"><input type="radio" name="q6" value="A" onchange="updateRadio(6)"> A. during</label>
+              <label class="mc-label"><input type="radio" name="q6" value="B" onchange="updateRadio(6)"> B. in</label>
+              <label class="mc-label"><input type="radio" name="q6" value="C" onchange="updateRadio(6)"> C. on</label>
+              <label class="mc-label"><input type="radio" name="q6" value="D" onchange="updateRadio(6)"> D. at</label>
+            </div>
+          </div>
+
+          <!-- Q7 -->
+          <div class="mc-item" id="q-block-7">
+            <div class="mc-statement"><b>Question 7.</b></div>
+            <div class="mc-grid-options">
+              <label class="mc-label"><input type="radio" name="q7" value="A" onchange="updateRadio(7)"> A. patient</label>
+              <label class="mc-label"><input type="radio" name="q7" value="B" onchange="updateRadio(7)"> B. patience</label>
+              <label class="mc-label"><input type="radio" name="q7" value="C" onchange="updateRadio(7)"> C. impatience</label>
+              <label class="mc-label"><input type="radio" name="q7" value="D" onchange="updateRadio(7)"> D. impatient</label>
+            </div>
+          </div>
+
+          <!-- Q8 -->
+          <div class="mc-item" id="q-block-8">
+            <div class="mc-statement"><b>Question 8.</b></div>
+            <div class="mc-grid-options">
+              <label class="mc-label"><input type="radio" name="q8" value="A" onchange="updateRadio(8)"> A. to open</label>
+              <label class="mc-label"><input type="radio" name="q8" value="B" onchange="updateRadio(8)"> B. opening</label>
+              <label class="mc-label"><input type="radio" name="q8" value="C" onchange="updateRadio(8)"> C. open</label>
+              <label class="mc-label"><input type="radio" name="q8" value="D" onchange="updateRadio(8)"> D. opened</label>
+            </div>
+          </div>
+
+          <!-- Q9 -->
+          <div class="mc-item" id="q-block-9">
+            <div class="mc-statement"><b>Question 9.</b></div>
+            <div class="mc-grid-options">
+              <label class="mc-label"><input type="radio" name="q9" value="A" onchange="updateRadio(9)"> A. cause</label>
+              <label class="mc-label"><input type="radio" name="q9" value="B" onchange="updateRadio(9)"> B. endure</label>
+              <label class="mc-label"><input type="radio" name="q9" value="C" onchange="updateRadio(9)"> C. promise</label>
+              <label class="mc-label"><input type="radio" name="q9" value="D" onchange="updateRadio(9)"> D. confront</label>
+            </div>
+          </div>
+
+          <!-- Q10 -->
+          <div class="mc-item" id="q-block-10">
+            <div class="mc-statement"><b>Question 10.</b></div>
+            <div class="mc-grid-options">
+              <label class="mc-label"><input type="radio" name="q10" value="A" onchange="updateRadio(10)"> A. borrow</label>
+              <label class="mc-label"><input type="radio" name="q10" value="B" onchange="updateRadio(10)"> B. borrowed</label>
+              <label class="mc-label"><input type="radio" name="q10" value="C" onchange="updateRadio(10)"> C. to borrow</label>
+              <label class="mc-label"><input type="radio" name="q10" value="D" onchange="updateRadio(10)"> D. borrowing</label>
+            </div>
+          </div>
+
+          <!-- Q11 -->
+          <div class="mc-item" id="q-block-11">
+            <div class="mc-statement"><b>Question 11.</b></div>
+            <div class="mc-grid-options">
+              <label class="mc-label"><input type="radio" name="q11" value="A" onchange="updateRadio(11)"> A. furthest</label>
+              <label class="mc-label"><input type="radio" name="q11" value="B" onchange="updateRadio(11)"> B. farther</label>
+              <label class="mc-label"><input type="radio" name="q11" value="C" onchange="updateRadio(11)"> C. far</label>
+              <label class="mc-label"><input type="radio" name="q11" value="D" onchange="updateRadio(11)"> D. further</label>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ================= READING 3 QUESTIONS (12-17) ================= -->
+      <div class="questions-content" id="qcontent-3">
+        <div class="q-section">
+          <div class="q-section-title">Questions 12–17</div>
+
+          <!-- Q12 -->
+          <div class="mc-item" id="q-block-12">
+            <div class="mc-statement"><b>Question 12.</b></div>
+            <div class="mc-grid-options">
+              <label class="mc-label"><input type="radio" name="q12" value="A" onchange="updateRadio(12)"> A. dreams</label>
+              <label class="mc-label"><input type="radio" name="q12" value="B" onchange="updateRadio(12)"> B. steps</label>
+              <label class="mc-label"><input type="radio" name="q12" value="C" onchange="updateRadio(12)"> C. rests</label>
+              <label class="mc-label"><input type="radio" name="q12" value="D" onchange="updateRadio(12)"> D. jumps</label>
+            </div>
+          </div>
+
+          <!-- Q13 -->
+          <div class="mc-item" id="q-block-13">
+            <div class="mc-statement"><b>Question 13.</b></div>
+            <div class="mc-grid-options">
+              <label class="mc-label"><input type="radio" name="q13" value="A" onchange="updateRadio(13)"> A. take on</label>
+              <label class="mc-label"><input type="radio" name="q13" value="B" onchange="updateRadio(13)"> B. break down</label>
+              <label class="mc-label"><input type="radio" name="q13" value="C" onchange="updateRadio(13)"> C. switch off</label>
+              <label class="mc-label"><input type="radio" name="q13" value="D" onchange="updateRadio(13)"> D. set up</label>
+            </div>
+          </div>
+
+          <!-- Q14 -->
+          <div class="mc-item" id="q-block-14">
+            <div class="mc-statement"><b>Question 14.</b></div>
+            <div class="mc-grid-options">
+              <label class="mc-label"><input type="radio" name="q14" value="A" onchange="updateRadio(14)"> A. keepers</label>
+              <label class="mc-label"><input type="radio" name="q14" value="B" onchange="updateRadio(14)"> B. holders</label>
+              <label class="mc-label"><input type="radio" name="q14" value="C" onchange="updateRadio(14)"> C. trappers</label>
+              <label class="mc-label"><input type="radio" name="q14" value="D" onchange="updateRadio(14)"> D. containers</label>
+            </div>
+          </div>
+
+          <!-- Q15 -->
+          <div class="mc-item" id="q-block-15">
+            <div class="mc-statement"><b>Question 15.</b></div>
+            <div class="mc-grid-options">
+              <label class="mc-label"><input type="radio" name="q15" value="A" onchange="updateRadio(15)"> A. variety</label>
+              <label class="mc-label"><input type="radio" name="q15" value="B" onchange="updateRadio(15)"> B. number</label>
+              <label class="mc-label"><input type="radio" name="q15" value="C" onchange="updateRadio(15)"> C. amount</label>
+              <label class="mc-label"><input type="radio" name="q15" value="D" onchange="updateRadio(15)"> D. quality</label>
+            </div>
+          </div>
+
+          <!-- Q16 -->
+          <div class="mc-item" id="q-block-16">
+            <div class="mc-statement"><b>Question 16.</b></div>
+            <div class="mc-grid-options">
+              <label class="mc-label"><input type="radio" name="q16" value="A" onchange="updateRadio(16)"> A. other</label>
+              <label class="mc-label"><input type="radio" name="q16" value="B" onchange="updateRadio(16)"> B. others</label>
+              <label class="mc-label"><input type="radio" name="q16" value="C" onchange="updateRadio(16)"> C. the others</label>
+              <label class="mc-label"><input type="radio" name="q16" value="D" onchange="updateRadio(16)"> D. another</label>
+            </div>
+          </div>
+
+          <!-- Q17 -->
+          <div class="mc-item" id="q-block-17">
+            <div class="mc-statement"><b>Question 17.</b></div>
+            <div class="mc-grid-options">
+              <label class="mc-label"><input type="radio" name="q17" value="A" onchange="updateRadio(17)"> A. In addition to</label>
+              <label class="mc-label"><input type="radio" name="q17" value="B" onchange="updateRadio(17)"> B. Instead of</label>
+              <label class="mc-label"><input type="radio" name="q17" value="C" onchange="updateRadio(17)"> C. On account of</label>
+              <label class="mc-label"><input type="radio" name="q17" value="D" onchange="updateRadio(17)"> D. In spite of</label>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- HIGHLIGHT FLOATING TOOLBAR -->
+  <div id="hlToolbar">
+    <button class="hl-btn hl-btn-green" title="Xanh lá" onclick="applyHighlight('hl-green')"></button>
+    <button class="hl-btn hl-btn-blue" title="Xanh da trời" onclick="applyHighlight('hl-blue')"></button>
+    <button class="hl-btn hl-btn-orange" title="Cam nhạt" onclick="applyHighlight('hl-orange')"></button>
+    <button class="hl-btn hl-btn-yellow" title="Vàng nhạt" onclick="applyHighlight('hl-yellow')"></button>
+    <button class="hl-btn-clear" onclick="removeHighlight()">✕ Xóa</button>
+  </div>
+
+  <!-- FOOTER: CIRCLE PROGRESS BAR TỪ CÂU 1 ĐẾN 17 -->
+  <footer>
+    <div class="footer-left">
+      <span class="progress-legend">Tiến độ:</span>
+      
+      <!-- Reading 1: 1 - 5 -->
+      <div class="p-group">
+        <span class="p-group-tag">R1</span>
+        <div id="circles-r1" style="display:flex; gap:5px;"></div>
+      </div>
+
+      <!-- Reading 2: 6 - 11 -->
+      <div class="p-group">
+        <span class="p-group-tag">R2</span>
+        <div id="circles-r2" style="display:flex; gap:5px;"></div>
+      </div>
+
+      <!-- Reading 3: 12 - 17 -->
+      <div class="p-group">
+        <span class="p-group-tag">R3</span>
+        <div id="circles-r3" style="display:flex; gap:5px;"></div>
+      </div>
+    </div>
+
+    <button class="submit-btn" id="submitBtn" onclick="submitExam()">Nộp bài</button>
+  </footer>
+
+  <!-- POPUP BÁO KẾT QUẢ KÈM NÚT "OK" -->
+  <div class="modal-overlay" id="scoreModal">
+    <div class="modal-box">
+      <div class="modal-title">Kết quả làm bài</div>
+      <div class="modal-score" id="scoreText">0/17</div>
+      <div class="modal-sub" id="scoreFeedback">Nhấn OK để quay lại bài làm và xem chi tiết các câu đúng, sai.</div>
+      <button class="modal-ok-btn" onclick="reviewExam()">OK</button>
+    </div>
+  </div>
+
+  <script>
+    /* BẢNG ĐÁP ÁN CHUẨN TỪ FILE KEY */
+    const ANSWER_KEY = {
+      1: "B",
+      2: "A",
+      3: "B",
+      4: "A",
+      5: "C",
+      6: "A",
+      7: "B",
+      8: "C",
+      9: "A",
+      10: "D",
+      11: "D",
+      12: "B",
+      13: "C",
+      14: "D",
+      15: "C",
+      16: "A",
+      17: "A"
+    };
+
+    const userAnswers = {};
+    let currentPassage = 1;
+    let isSubmitted = false;
+
+    /* CHUYỂN PASSAGE */
+    function switchPassage(pNum) {
+      currentPassage = pNum;
+      for (let i = 1; i <= 3; i++) {
+        document.getElementById(`tab-btn-${i}`).classList.toggle('active', i === pNum);
+        document.getElementById(`ptext-${i}`).classList.toggle('active', i === pNum);
+        document.getElementById(`qcontent-${i}`).classList.toggle('active', i === pNum);
+      }
+    }
+
+    /* KHỞI TẠO TIẾN ĐỘ 17 VÒNG TRÒN */
+    function initProgressCircles() {
+      const g1 = document.getElementById('circles-r1');
+      const g2 = document.getElementById('circles-r2');
+      const g3 = document.getElementById('circles-r3');
+
+      for (let i = 1; i <= 17; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'circle-btn';
+        btn.id = `circle-${i}`;
+        btn.textContent = i;
+        btn.title = `Xem câu ${i}`;
+        btn.onclick = () => jumpToQuestion(i);
+
+        if (i <= 5) g1.appendChild(btn);
+        else if (i <= 11) g2.appendChild(btn);
+        else g3.appendChild(btn);
+      }
+    }
+
+    /* ĐIỀU HƯỚNG CUỘN ĐẾN CÂU HỎI */
+    function jumpToQuestion(qNum) {
+      let targetPassage = 1;
+      if (qNum >= 6 && qNum <= 11) targetPassage = 2;
+      else if (qNum >= 12) targetPassage = 3;
+
+      if (currentPassage !== targetPassage) {
+        switchPassage(targetPassage);
+      }
+
+      setTimeout(() => {
+        const block = document.getElementById(`q-block-${qNum}`);
+        if (block) {
+          block.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 50);
+    }
+
+    /* CẬP NHẬT ĐÁP ÁN TRẮC NGHIỆM */
+    function updateRadio(qNum) {
+      if (isSubmitted) return; // Khóa sau khi đã nộp bài
+
+      const selected = document.querySelector(`input[name="q${qNum}"]:checked`);
+      const circle = document.getElementById(`circle-${qNum}`);
+      const parent = document.getElementById(`q-block-${qNum}`);
+      parent.querySelectorAll('.mc-label').forEach(lbl => lbl.classList.remove('selected'));
+      
+      if (selected) {
+        userAnswers[qNum] = selected.value;
+        circle.classList.add('answered');
+        selected.closest('.mc-label').classList.add('selected');
+      } else {
+        circle.classList.remove('answered');
+      }
+    }
+
+    /* NỘP BÀI THI & TÍNH ĐIỂM */
+    function submitExam() {
+      clearInterval(timerInterval);
+      let correctCount = 0;
+
+      for (let i = 1; i <= 17; i++) {
+        const userAns = (userAnswers[i] || "").trim().toUpperCase();
+        const correctAns = ANSWER_KEY[i].toUpperCase();
+
+        if (userAns === correctAns) {
+          correctCount++;
+        }
+      }
+
+      document.getElementById('scoreText').textContent = `${correctCount}/17`;
+      document.getElementById('scoreModal').classList.add('active');
+    }
+
+    /* BẤM "OK" -> QUAY LẠI BÀI VÀ ĐÁNH MÀU ĐÚNG/SAI */
+    function reviewExam() {
+      isSubmitted = true;
+      document.getElementById('scoreModal').classList.remove('active');
+      document.getElementById('submitBtn').style.display = 'none';
+
+      // Khóa radio buttons
+      document.querySelectorAll('input[type="radio"]').forEach(r => r.disabled = true);
+
+      // Đánh dấu chi tiết câu đúng (xanh lá) và câu sai (đỏ)
+      for (let i = 1; i <= 17; i++) {
+        const userAns = (userAnswers[i] || "").trim().toUpperCase();
+        const correctAns = ANSWER_KEY[i].toUpperCase();
+        const circle = document.getElementById(`circle-${i}`);
+        const parent = document.getElementById(`q-block-${i}`);
+
+        if (userAns === correctAns) {
+          circle.className = 'circle-btn res-correct';
+        } else {
+          circle.className = 'circle-btn res-wrong';
+        }
+
+        // Tô màu trên các đáp án lựa chọn
+        parent.querySelectorAll('.mc-label').forEach(lbl => {
+          const inp = lbl.querySelector('input');
+          const val = inp.value.toUpperCase();
+
+          if (val === correctAns) {
+            lbl.classList.add('state-correct');
+            const badge = document.createElement('span');
+            badge.className = 'correct-badge';
+            badge.textContent = '✓ Đáp án đúng';
+            lbl.appendChild(badge);
+          } else if (val === userAns && userAns !== correctAns) {
+            lbl.classList.add('state-wrong');
+          }
+        });
+      }
+
+      // Cuộn lên đầu bài để thí sinh bắt đầu xem lại
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /* ĐỒNG HỒ ĐẾM NGƯỢC 30 PHÚT */
+    let timeLeft = 30 * 60;
+    const timerEl = document.getElementById('timerDisplay');
+    const timerInterval = setInterval(() => {
+      timeLeft--;
+      if (timeLeft <= 0) {
+        clearInterval(timerInterval);
+        timerEl.textContent = "00:00";
+        alert("Đã hết thời gian 30 phút làm bài!");
+        submitExam();
+        return;
+      }
+      const m = Math.floor(timeLeft / 60);
+      const s = timeLeft % 60;
+      timerEl.textContent = `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+    }, 1000);
+
+    /* THANH KÉO CO GIÃN 2 CỘT */
+    const resizer = document.getElementById('dragResizer');
+    const leftPane = document.getElementById('leftPane');
+    const rightPane = document.getElementById('rightPane');
+    const container = document.getElementById('container');
+
+    let isDragging = false;
+    resizer.addEventListener('mousedown', () => {
+      isDragging = true;
+      resizer.classList.add('dragging');
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      const containerRect = container.getBoundingClientRect();
+      const pointerRelativeX = e.clientX - containerRect.left;
+      const minWidth = 320;
+      if (pointerRelativeX >= minWidth && pointerRelativeX <= (containerRect.width - minWidth)) {
+        leftPane.style.flex = 'none';
+        leftPane.style.width = pointerRelativeX + 'px';
+        rightPane.style.flex = '1';
+      }
+    });
+
+    document.addEventListener('mouseup', () => {
+      if (isDragging) {
+        isDragging = false;
+        resizer.classList.remove('dragging');
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+      }
+    });
+
+    /* HIGHLIGHT LOGIC */
+    let currentSavedRange = null;
+    const hlToolbar = document.getElementById('hlToolbar');
+
+    document.addEventListener('mouseup', (e) => {
+      if (e.target.closest('#hlToolbar')) return;
+
+      setTimeout(() => {
+        const selection = window.getSelection();
+        if (!selection || selection.isCollapsed || selection.toString().trim() === "") {
+          hlToolbar.style.display = 'none';
+          currentSavedRange = null;
+          return;
+        }
+
+        const range = selection.getRangeAt(0);
+        if (!range.commonAncestorContainer.closest || !range.commonAncestorContainer.closest('.pane')) {
+          if (range.commonAncestorContainer.parentElement && !range.commonAncestorContainer.parentElement.closest('.pane')) {
+            hlToolbar.style.display = 'none';
+            return;
+          }
+        }
+
+        currentSavedRange = range.cloneRange();
+        const rect = range.getBoundingClientRect();
+        
+        hlToolbar.style.display = 'flex';
+        hlToolbar.style.left = `${rect.left + rect.width / 2}px`;
+        hlToolbar.style.top = `${rect.top + window.scrollY - 6}px`;
+      }, 20);
+    });
+
+    function applyHighlight(colorClass) {
+      if (!currentSavedRange) return;
+      
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(currentSavedRange);
+
+      const span = document.createElement('span');
+      span.className = `hl-span ${colorClass}`;
+      
+      try {
+        currentSavedRange.surroundContents(span);
+      } catch (e) {
+        const contents = currentSavedRange.extractContents();
+        span.appendChild(contents);
+        currentSavedRange.insertNode(span);
+      }
+
+      selection.removeAllRanges();
+      hlToolbar.style.display = 'none';
+      currentSavedRange = null;
+    }
+
+    function removeHighlight() {
+      if (!currentSavedRange) return;
+
+      const container = currentSavedRange.commonAncestorContainer;
+      let targetSpan = container.nodeType === 1 ? container.closest('.hl-span') : container.parentElement.closest('.hl-span');
+
+      if (targetSpan) {
+        const parent = targetSpan.parentNode;
+        while (targetSpan.firstChild) {
+          parent.insertBefore(targetSpan.firstChild, targetSpan);
+        }
+        parent.removeChild(targetSpan);
+      } else {
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(currentSavedRange);
+        const spans = document.querySelectorAll('.hl-span');
+        spans.forEach(s => {
+          if (selection.containsNode(s, true)) {
+            const p = s.parentNode;
+            while (s.firstChild) p.insertBefore(s.firstChild, p);
+            p.removeChild(s);
+          }
+        });
+      }
+
+      window.getSelection().removeAllRanges();
+      hlToolbar.style.display = 'none';
+      currentSavedRange = null;
+    }
+
+    initProgressCircles();
+  </script>
+</body>
+</html>
